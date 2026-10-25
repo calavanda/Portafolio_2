@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portafolio PWA Avanzado | calavanda</title>
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="stylesheet" href="./common/design-system.css">
+  <style>
+    /* Hub-specific styles */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8)), url('./icons/icon.svg') no-repeat right 5% center / 180px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-tagline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-pill);
+      color: #38bdf8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      max-width: 800px;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 720px;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Diagnostics grid */
+    .diagnostics-panel {
+      margin-bottom: 2.5rem;
+    }
+
+    .diag-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .diag-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .diag-name {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .diag-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    /* Exercises Bento Grid */
+    .exercises-section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .exercises-section-sub {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .exercises-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .exercise-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      transition: all var(--transition-normal);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .exercise-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .exercise-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #38bdf8, #6366f1);
+      opacity: 0.8;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .exercise-number {
+      font-family: ui-monospace, monospace;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .exercise-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .exercise-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+    }
+
+    .exercise-desc {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+      flex-grow: 1;
+    }
+
+    .tech-tags {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .tech-pill {
+      font-family: ui-monospace, monospace;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.55rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      color: #cbd5e1;
+    }
+
+    .card-launch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    .install-pwa-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.15));
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.75rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="./index.html" class="brand-wrapper">
+        <img src="./icons/icon.svg" alt="PWA Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Portafolio PWA Avanzado</h1>
+          <div class="brand-meta">
+            <span>5 Ejercicios Prácticos Individuales</span>
+            <span>•</span>
+            <span class="author-pill">Autor: calavanda</span>
+          </div>
+        </div>
+      </a>
+
+      <nav class="nav-pills">
+        <a href="./index.html" class="nav-link active">Hub Principal</a>
+        <a href="./Ejercicio_1/index.html" class="nav-link">E1: Geolocalización</a>
+        <a href="./Ejercicio_2/index.html" class="nav-link">E2: Cámara</a>
+        <a href="./Ejercicio_3/index.html" class="nav-link">E3: Notificaciones</a>
+        <a href="./Ejercicio_4/index.html" class="nav-link">E4: IndexedDB</a>
+        <a href="./Ejercicio_5/index.html" class="nav-link">E5: Caché Dinámica</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero Banner -->
+      <section class="hero-banner">
+        <span class="hero-tagline">⚡ Progressive Web Application Portfolio</span>
+        <h2 class="hero-title">Capacidades Avanzadas de Hardware & Persistencia Offline</h2>
+        <p class="hero-desc">
+          Conjunto de 5 ejercicios prácticos implementados de manera modular e independiente, demostrando la gestión explícita de permisos, APIs de hardware (GPS y cámara), notificaciones locales desde el Service Worker, persistencia transaccional con IndexedDB y estrategias de caché dinámicas Network-First.
+        </p>
+
+        <div class="hero-meta">
+          <span class="author-pill" style="font-size: 0.9rem; padding: 0.35rem 0.9rem;">
+            Desarrollado por: calavanda
+          </span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">
+            Estructura: Carpetas independientes por ejercicio
+          </span>
+        </div>
+      </section>
+
+      <!-- Optional PWA Install Prompt -->
+      <div id="pwaInstallBanner" class="install-pwa-banner" style="display: none;">
+        <div>
+          <strong style="color: #ffffff; font-size: 1rem;">📱 Instalar Aplicación Web Progresiva</strong>
+          <p style="color: #cbd5e1; font-size: 0.85rem; margin-top: 0.2rem;">
+            Instala este portafolio como app de escritorio o móvil para probar capacidades de hardware nativas y modo 100% offline.
+          </p>
+        </div>
+        <button id="btnInstallPwa" class="btn btn-primary">
+          ⬇️ Instalar en Dispositivo
+        </button>
+      </div>
+
+      <!-- Live Web API Diagnostics Panel -->
+      <section class="card diagnostics-panel">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">Diagnóstico de Compatibilidad de Web APIs</h3>
+            <p class="card-subtitle">Verificación en tiempo real del hardware y entorno del navegador del usuario</p>
+          </div>
+          <span class="badge badge-emerald">Diagnóstico Activo</span>
+        </div>
+
+        <div class="diag-grid">
+          <div class="diag-item">
+            <span class="diag-name">Permissions API</span>
+            <div class="diag-status">
+              <span id="diagPerm">Verificando...</span>
+              <span class="status-indicator status-online" id="dotPerm"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">Geolocation GPS</span>
+            <div class="diag-status">
+              <span id="diagGeo">Verificando...</span>
+              <span class="status-indicator status-online" id="dotGeo"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">MediaDevices (Cámara)</span>
+            <div class="diag-status">
+              <span id="diagCam">Verificando...</span>
+              <span class="status-indicator status-online" id="dotCam"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">Notification API</span>
+            <div class="diag-status">
+              <span id="diagNotif">Verificando...</span>
+              <span class="status-indicator status-online" id="dotNotif"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">Service Worker</span>
+            <div class="diag-status">
+              <span id="diagSW">Verificando...</span>
+              <span class="status-indicator status-online" id="dotSW"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">IndexedDB Nativo</span>
+            <div class="diag-status">
+              <span id="diagIDB">Verificando...</span>
+              <span class="status-indicator status-online" id="dotIDB"></span>
+            </div>
+          </div>
+          <div class="diag-item">
+            <span class="diag-name">Cache Storage API</span>
+            <div class="diag-status">
+              <span id="diagCache">Verificando...</span>
+              <span class="status-indicator status-online" id="dotCache"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 Exercises Grid -->
+      <section>
+        <h3 class="exercises-section-title">Ejercicios del Portafolio</h3>
+        <p class="exercises-section-sub">Selecciona un ejercicio para abrir su entorno práctico autónomo:</p>
+
+        <div class="exercises-grid">
+          <!-- Card Ejercicio 1 -->
+          <a href="./Ejercicio_1/index.html" class="exercise-card">
+            <div class="card-top">
+              <span class="exercise-number">Carpeta: Ejercicio_1</span>
+              <span class="badge badge-cyan">GPS & Map</span>
+            </div>
+            <div class="exercise-icon">📍</div>
+            <h4 class="exercise-title">Ejercicio 1: Permisos & Geolocalización</h4>
+            <p class="exercise-desc">
+              Verificación del estado de permisos con <code>navigator.permissions.query</code>, solicitud de acceso al GPS con <code>navigator.geolocation.getCurrentPosition</code> y despliegue interactivo con mapa Leaflet.
+            </p>
+            <div class="tech-tags">
+              <span class="tech-pill">Permissions API</span>
+              <span class="tech-pill">Geolocation</span>
+              <span class="tech-pill">Leaflet Map</span>
+            </div>
+            <div class="card-launch-row">
+              <span>Abrir Ejercicio 1</span>
+              <span>→</span>
+            </div>
+          </a>
+
+          <!-- Card Ejercicio 2 -->
+          <a href="./Ejercicio_2/index.html" class="exercise-card">
+            <div class="card-top">
+              <span class="exercise-number">Carpeta: Ejercicio_2</span>
+              <span class="badge badge-emerald">Hardware Video</span>
+            </div>
+            <div class="exercise-icon">📷</div>
+            <h4 class="exercise-title">Ejercicio 2: Captura con Cámara</h4>
+            <p class="exercise-desc">
+              Acceso a la cámara web o móvil con <code>navigator.mediaDevices.getUserMedia</code>, renderizado en vivo en elemento <code>&lt;video&gt;</code> y captura de fotografía estática procesada en un <code>&lt;canvas&gt;</code>.
+            </p>
+            <div class="tech-tags">
+              <span class="tech-pill">getUserMedia</span>
+              <span class="tech-pill">&lt;video&gt;</span>
+              <span class="tech-pill">HTML Canvas</span>
+              <span class="tech-pill">Filtros Ópticos</span>
+            </div>
+            <div class="card-launch-row">
+              <span>Abrir Ejercicio 2</span>
+              <span>→</span>
+            </div>
+          </a>
+
+          <!-- Card Ejercicio 3 -->
+          <a href="./Ejercicio_3/index.html" class="exercise-card">
+            <div class="card-top">
+              <span class="exercise-number">Carpeta: Ejercicio_3</span>
+              <span class="badge badge-purple">Service Worker Push</span>
+            </div>
+            <div class="exercise-icon">🔔</div>
+            <h4 class="exercise-title">Ejercicio 3: Notificaciones SW Locales</h4>
+            <p class="exercise-desc">
+              Solicitud de permisos al usuario (<code>Notification.requestPermission</code>) y disparo de notificaciones locales personalizadas con título, cuerpo, icono y vibración mediante <code>self.registration.showNotification</code>.
+            </p>
+            <div class="tech-tags">
+              <span class="tech-pill">Notification API</span>
+              <span class="tech-pill">Service Worker</span>
+              <span class="tech-pill">Vibration</span>
+              <span class="tech-pill">notificationclick</span>
+            </div>
+            <div class="card-launch-row">
+              <span>Abrir Ejercicio 3</span>
+              <span>→</span>
+            </div>
+          </a>
+
+          <!-- Card Ejercicio 4 -->
+          <a href="./Ejercicio_4/index.html" class="exercise-card">
+            <div class="card-top">
+              <span class="exercise-number">Carpeta: Ejercicio_4</span>
+              <span class="badge badge-amber">Offline Storage</span>
+            </div>
+            <div class="exercise-icon">🗄️</div>
+            <h4 class="exercise-title">Ejercicio 4: Persistencia con IndexedDB</h4>
+            <p class="exercise-desc">
+              Apertura y creación de Object Store e índices en <code>IndexedDB</code> nativo con interfaz completa para insertar, consultar, filtrar, editar y eliminar registros locales sin depender de internet.
+            </p>
+            <div class="tech-tags">
+              <span class="tech-pill">IndexedDB Nativo</span>
+              <span class="tech-pill">Object Store</span>
+              <span class="tech-pill">CRUD Offline</span>
+              <span class="tech-pill">Filtros Reactivos</span>
+            </div>
+            <div class="card-launch-row">
+              <span>Abrir Ejercicio 4</span>
+              <span>→</span>
+            </div>
+          </a>
+
+          <!-- Card Ejercicio 5 -->
+          <a href="./Ejercicio_5/index.html" class="exercise-card">
+            <div class="card-top">
+              <span class="exercise-number">Carpeta: Ejercicio_5</span>
+              <span class="badge badge-rose">Cache Strategy</span>
+            </div>
+            <div class="exercise-icon">🔄</div>
+            <h4 class="exercise-title">Ejercicio 5: Caché Network-First & Fallback</h4>
+            <p class="exercise-desc">
+              Consumo de una API REST remota mediante <code>fetch</code> con estrategia Network-First: sincroniza el JSON en IndexedDB/Cache API y si se pierde la red recupera y renderiza automáticamente la copia local.
+            </p>
+            <div class="tech-tags">
+              <span class="tech-pill">Network-First</span>
+              <span class="tech-pill">IndexedDB Fallback</span>
+              <span class="tech-pill">Cache API</span>
+              <span class="tech-pill">Offline Detection</span>
+            </div>
+            <div class="card-launch-row">
+              <span>Abrir Ejercicio 5</span>
+              <span>→</span>
+            </div>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Portafolio PWA Avanzado</strong> — 5 Ejercicios Prácticos Individuales
+      </div>
+      <div>
+        Autor: <span class="author-pill">calavanda</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Register Root Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(err => {
+        console.warn('SW registration info:', err);
+      });
+    }
+
+    // PWA Install prompt handling
+    let deferredPrompt;
+    const pwaInstallBanner = document.getElementById('pwaInstallBanner');
+    const btnInstallPwa = document.getElementById('btnInstallPwa');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      pwaInstallBanner.style.display = 'flex';
+    });
+
+    btnInstallPwa.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log('Resultado de instalación:', outcome);
+        deferredPrompt = null;
+        pwaInstallBanner.style.display = 'none';
+      }
+    });
+
+    // Real-time Web API Diagnostics
+    window.addEventListener('DOMContentLoaded', () => {
+      // Permissions
+      const hasPerm = 'permissions' in navigator;
+      document.getElementById('diagPerm').textContent = hasPerm ? 'Compatible' : 'No soportado';
+      document.getElementById('dotPerm').className = hasPerm ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // Geolocation
+      const hasGeo = 'geolocation' in navigator;
+      document.getElementById('diagGeo').textContent = hasGeo ? 'Disponible' : 'No disponible';
+      document.getElementById('dotGeo').className = hasGeo ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // MediaDevices
+      const hasCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      document.getElementById('diagCam').textContent = hasCam ? 'Disponible' : 'No disponible';
+      document.getElementById('dotCam').className = hasCam ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // Notifications
+      const hasNotif = 'Notification' in window;
+      document.getElementById('diagNotif').textContent = hasNotif ? 'Compatible' : 'No soportado';
+      document.getElementById('dotNotif').className = hasNotif ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // Service Worker
+      const hasSW = 'serviceWorker' in navigator;
+      document.getElementById('diagSW').textContent = hasSW ? 'Compatible' : 'No soportado';
+      document.getElementById('dotSW').className = hasSW ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // IndexedDB
+      const hasIDB = 'indexedDB' in window;
+      document.getElementById('diagIDB').textContent = hasIDB ? 'Compatible' : 'No soportado';
+      document.getElementById('dotIDB').className = hasIDB ? 'status-indicator status-online' : 'status-indicator status-offline';
+
+      // Cache API
+      const hasCache = 'caches' in window;
+      document.getElementById('diagCache').textContent = hasCache ? 'Compatible' : 'No soportado';
+      document.getElementById('dotCache').className = hasCache ? 'status-indicator status-online' : 'status-indicator status-offline';
+    });
+  </script>
+</body>
+</html>

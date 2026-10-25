@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio 1: Permisos y Geolocalización | calavanda</title>
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../common/design-system.css">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Leaflet Map CSS for Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="../index.html" class="brand-wrapper">
+        <img src="../icons/icon.svg" alt="PWA Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Ejercicio 1: Geolocalización & Permisos</h1>
+          <div class="brand-meta">
+            <span>Portafolio PWA Avanzado</span>
+            <span>•</span>
+            <span class="author-pill">Autor: calavanda</span>
+          </div>
+        </div>
+      </a>
+
+      <nav class="nav-pills">
+        <a href="../index.html" class="nav-link">← Hub Principal</a>
+        <a href="../Ejercicio_1/index.html" class="nav-link active">E1: Geolocalización</a>
+        <a href="../Ejercicio_2/index.html" class="nav-link">E2: Cámara</a>
+        <a href="../Ejercicio_3/index.html" class="nav-link">E3: Notificaciones</a>
+        <a href="../Ejercicio_4/index.html" class="nav-link">E4: IndexedDB</a>
+        <a href="../Ejercicio_5/index.html" class="nav-link">E5: Caché Dinámica</a>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Exercise description banner -->
+      <section class="alert alert-info">
+        <div>
+          <strong>Especificación Académica:</strong>
+          Verificación del estado de permisos con la <code>Permissions API</code> (<code>navigator.permissions.query</code>) y solicitud de acceso al GPS mediante <code>navigator.geolocation.getCurrentPosition</code> con despliegue de coordenadas y mapa interactivo.
+        </div>
+      </section>
+
+      <div class="grid-layout">
+        <!-- Panel Izquierdo: Permisos y Controles -->
+        <div class="control-column">
+          <!-- Card 1: Estado del Permiso -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Permissions API</h2>
+                <p class="card-subtitle">Consulta reactiva de permisos del navegador</p>
+              </div>
+              <span id="permissionBadge" class="badge badge-amber">Consultando...</span>
+            </div>
+
+            <div class="permission-status-box">
+              <div class="status-row">
+                <span class="status-label">Permiso 'geolocation':</span>
+                <strong id="permissionStateText" class="status-value">-</strong>
+              </div>
+              <div class="status-row">
+                <span class="status-label">Soporte de API:</span>
+                <span id="apiSupportBadge" class="badge badge-emerald">Compatible</span>
+              </div>
+              <p class="helper-text" id="permissionExplanation">
+                Detecta si el usuario ya otorgó, denegó o tiene pendiente la solicitud de ubicación en el navegador.
+              </p>
+            </div>
+
+            <div class="action-buttons-group">
+              <button id="btnCheckPermission" class="btn btn-secondary" title="Re-consultar permisos con navigator.permissions.query">
+                🔄 Verificar Permiso
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Geolocalización Actions -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Captura de Coordenadas GPS</h2>
+                <p class="card-subtitle">navigator.geolocation</p>
+              </div>
+            </div>
+
+            <div class="button-toolbar">
+              <button id="btnGetLocation" class="btn btn-primary">
+                📍 Obtener Ubicación Actual
+              </button>
+              <button id="btnToggleWatch" class="btn btn-secondary">
+                📡 Monitoreo en Vivo (Watch)
+              </button>
+            </div>
+
+            <div id="locationLoader" class="loader-box" style="display: none;">
+              <div class="spinner"></div>
+              <span>Conectando con el satélite / sensor GPS...</span>
+            </div>
+
+            <div id="locationErrorBox" class="error-box" style="display: none;"></div>
+
+            <!-- Panel de Datos Numéricos -->
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-label">Latitud</div>
+                <div class="metric-value" id="valLatitude">--.------°</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Longitud</div>
+                <div class="metric-value" id="valLongitude">--.------°</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Precisión GPS</div>
+                <div class="metric-value" id="valAccuracy">-- m</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Altitud / Rumbo</div>
+                <div class="metric-value" id="valAltitude">-- / --</div>
+              </div>
+            </div>
+
+            <div class="timestamp-row">
+              <span>Última lectura:</span>
+              <span id="valTimestamp">Ninguna registrada aún</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Mapa Interactivo -->
+        <div class="map-column">
+          <div class="card map-card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Mapa Interactivo</h2>
+                <p class="card-subtitle" id="mapStatusSubtitle">Esperando coordenadas GPS para centrar el mapa</p>
+              </div>
+              <div class="map-actions">
+                <button id="btnCenterMap" class="btn btn-secondary" disabled>🎯 Re-centrar</button>
+              </div>
+            </div>
+
+            <!-- Leaflet Container -->
+            <div id="leafletMap" class="map-view"></div>
+
+            <div class="map-legend">
+              <span class="legend-item"><span class="legend-dot pinpoint-dot"></span> Marcador actual</span>
+              <span class="legend-item"><span class="legend-dot accuracy-dot"></span> Radio de precisión GPS</span>
+              <span class="legend-item" id="providerInfo">OpenStreetMap / Leaflet</span>
+            </div>
+          </div>
+
+          <!-- Code Snippet Box -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1rem;">Código Técnico Implementado</h3>
+              <span class="badge badge-purple">Web APIs</span>
+            </div>
+            <pre class="tech-box"><code>// 1. Verificación de permisos
+const status = await navigator.permissions.query({ name: 'geolocation' });
+status.onchange = () => updateUI(status.state);
+
+// 2. Solicitud de coordenadas
+navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    const { latitude, longitude, accuracy } = pos.coords;
+    renderInteractiveMap(latitude, longitude, accuracy);
+  },
+  (err) => handleError(err),
+  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+);</code></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Ejercicio 1</strong> — Portafolio de Aplicaciones Web Progresivas
+      </div>
+      <div>
+        Diseñado y desarrollado por <span class="author-pill">calavanda</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

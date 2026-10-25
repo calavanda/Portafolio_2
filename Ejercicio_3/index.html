@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio 3: Notificaciones Push Locales | calavanda</title>
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../common/design-system.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="../index.html" class="brand-wrapper">
+        <img src="../icons/icon.svg" alt="PWA Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Ejercicio 3: Notificaciones SW Locales</h1>
+          <div class="brand-meta">
+            <span>Portafolio PWA Avanzado</span>
+            <span>•</span>
+            <span class="author-pill">Autor: calavanda</span>
+          </div>
+        </div>
+      </a>
+
+      <nav class="nav-pills">
+        <a href="../index.html" class="nav-link">← Hub Principal</a>
+        <a href="../Ejercicio_1/index.html" class="nav-link">E1: Geolocalización</a>
+        <a href="../Ejercicio_2/index.html" class="nav-link">E2: Cámara</a>
+        <a href="../Ejercicio_3/index.html" class="nav-link active">E3: Notificaciones</a>
+        <a href="../Ejercicio_4/index.html" class="nav-link">E4: IndexedDB</a>
+        <a href="../Ejercicio_5/index.html" class="nav-link">E5: Caché Dinámica</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Academic specification banner -->
+      <section class="alert alert-info">
+        <div>
+          <strong>Especificación Académica:</strong>
+          Solicitud de permisos de notificación al usuario (<code>Notification.requestPermission</code>) y disparo de una notificación local personalizada (con título, cuerpo, icono y vibración) ejecutada mediante el registro del Service Worker (<code>self.registration.showNotification</code>).
+        </div>
+      </section>
+
+      <div class="notif-layout">
+        <!-- Columna Izquierda: Permisos y Constructor de Notificaciones -->
+        <div class="form-column">
+          <!-- Card 1: Estado del Service Worker y Permisos -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Permisos & Service Worker</h2>
+                <p class="card-subtitle">Infraestructura de notificaciones nativas</p>
+              </div>
+              <span id="swStatusBadge" class="badge badge-amber">Registrando SW...</span>
+            </div>
+
+            <div class="status-summary-box">
+              <div class="status-row">
+                <span>Notification.permission:</span>
+                <span id="notifPermissionBadge" class="badge badge-amber">default</span>
+              </div>
+              <div class="status-row">
+                <span>Service Worker Scope:</span>
+                <span id="swScopeText" class="mono-text">/Ejercicio_3/</span>
+              </div>
+              <div class="status-row">
+                <span>Soporte en navegador:</span>
+                <span id="supportBadge" class="badge badge-emerald">Compatible</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+              <button id="btnRequestPermission" class="btn btn-primary" style="width: 100%;">
+                🔔 Solicitar Permiso de Notificación
+              </button>
+            </div>
+            <p id="permAdvice" class="helper-text">
+              Si el permiso está en "default", el navegador solicitará tu confirmación. Si está "denied", debes permitirlo desde el candado de la barra de direcciones.
+            </p>
+          </div>
+
+          <!-- Card 2: Constructor de la Notificación Personalizada -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Personalizador de Notificación</h2>
+                <p class="card-subtitle">Campos ejecutados por registration.showNotification</p>
+              </div>
+              <span class="badge badge-purple">SW Event</span>
+            </div>
+
+            <form id="notifForm">
+              <!-- Preset templates -->
+              <div class="form-group">
+                <label for="templateSelect" class="form-label">Plantillas Rápidas:</label>
+                <select id="templateSelect" class="form-control">
+                  <option value="custom">✏️ Personalizado (Escribe tus propios datos)</option>
+                  <option value="alert">⚠️ Alerta de Sistema PWA</option>
+                  <option value="sync">🔄 Sincronización Exitosa de Datos</option>
+                  <option value="reminder">⏰ Recordatorio de Calificación</option>
+                </select>
+              </div>
+
+              <!-- Title -->
+              <div class="form-group">
+                <label for="notifTitle" class="form-label">Título de la Notificación:</label>
+                <input type="text" id="notifTitle" class="form-control" value="🚀 Notificación PWA Local" required>
+              </div>
+
+              <!-- Body -->
+              <div class="form-group">
+                <label for="notifBody" class="form-label">Cuerpo del Mensaje (Body):</label>
+                <textarea id="notifBody" class="form-control" rows="3" required>Notificación local ejecutada a través del Service Worker. Autor: calavanda.</textarea>
+              </div>
+
+              <div class="form-grid">
+                <!-- Vibration -->
+                <div class="form-group">
+                  <label for="notifVibration" class="form-label">Patrón de Vibración:</label>
+                  <select id="notifVibration" class="form-control">
+                    <option value="standard">[200, 100, 200, 100, 200] (Estándar)</option>
+                    <option value="double">[400, 200, 400] (Doble pulso)</option>
+                    <option value="quick">[100, 50, 100, 50, 100] (Rápido)</option>
+                    <option value="none">[0] (Silencioso)</option>
+                  </select>
+                </div>
+
+                <!-- Delay -->
+                <div class="form-group">
+                  <label for="notifDelay" class="form-label">Temporizador de Disparo:</label>
+                  <select id="notifDelay" class="form-control">
+                    <option value="0">⚡ Inmediato</option>
+                    <option value="3">⏱️ En 3 segundos (Prueba de segundo plano)</option>
+                    <option value="5">⏱️ En 5 segundos</option>
+                    <option value="10">⏱️ En 10 segundos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="button-container" style="margin-top: 1rem;">
+                <button type="submit" id="btnSendNotification" class="btn btn-primary" style="width: 100%;">
+                  🚀 Disparar Notificación Local vía Service Worker
+                </button>
+              </div>
+            </form>
+
+            <div id="countdownBox" class="countdown-box" style="display: none;">
+              <span class="spinner"></span>
+              <span id="countdownText">Disparando en 3 segundos... ¡Puedes minimizar el navegador para verla llegar!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Vista Previa, Historial y Código -->
+        <div class="preview-column">
+          <!-- Card: Vista Previa Mockup de la Notificación -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Previsualización del Sistema Operativo</h3>
+                <p class="card-subtitle">Así se renderiza en la bandeja del sistema</p>
+              </div>
+              <span class="badge badge-cyan">Mockup Preview</span>
+            </div>
+
+            <!-- OS Notification Mockup -->
+            <div class="os-notif-mockup">
+              <div class="mockup-header">
+                <img src="../icons/icon.svg" alt="App Icon" class="mockup-icon">
+                <span class="mockup-app-name">Portafolio PWA • Ahora</span>
+              </div>
+              <div class="mockup-content">
+                <div class="mockup-title" id="previewTitle">🚀 Notificación PWA Local</div>
+                <div class="mockup-body" id="previewBody">Notificación local ejecutada a través del Service Worker. Autor: calavanda.</div>
+              </div>
+              <div class="mockup-actions">
+                <span class="mockup-btn">👀 Ver Portafolio</span>
+                <span class="mockup-btn">❌ Descartar</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Historial de Disparos -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1.05rem;">Historial de Notificaciones Emitidas</h3>
+              <button id="btnClearHistory" class="btn btn-secondary" style="padding: 0.3rem 0.7rem; font-size: 0.75rem;">Limpiar</button>
+            </div>
+            <div id="notifHistoryList" class="history-list">
+              <p class="empty-history-text">No has emitido notificaciones en esta sesión aún.</p>
+            </div>
+          </div>
+
+          <!-- Código Técnico -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1rem;">Código Técnico Implementado</h3>
+              <span class="badge badge-purple">Notifications API</span>
+            </div>
+            <pre class="tech-box"><code>// 1. Solicitud explícita de permiso
+const permission = await Notification.requestPermission();
+
+// 2. Disparo local desde el Service Worker
+const registration = await navigator.serviceWorker.ready;
+await registration.showNotification(title, {
+  body: 'Mensaje personalizado',
+  icon: '/icons/icon.svg',
+  badge: '/icons/badge.svg',
+  vibrate: [200, 100, 200, 100, 200],
+  tag: 'pwa-local-alert',
+  renotify: true,
+  data: { url: './index.html' }
+});</code></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Ejercicio 3</strong> — Portafolio de Aplicaciones Web Progresivas
+      </div>
+      <div>
+        Diseñado y desarrollado por <span class="author-pill">calavanda</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

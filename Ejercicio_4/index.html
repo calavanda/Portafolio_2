@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio 4: Persistencia Asíncrona con IndexedDB | calavanda</title>
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../common/design-system.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="../index.html" class="brand-wrapper">
+        <img src="../icons/icon.svg" alt="PWA Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Ejercicio 4: Persistencia con IndexedDB</h1>
+          <div class="brand-meta">
+            <span>Portafolio PWA Avanzado</span>
+            <span>•</span>
+            <span class="author-pill">Autor: calavanda</span>
+          </div>
+        </div>
+      </a>
+
+      <nav class="nav-pills">
+        <a href="../index.html" class="nav-link">← Hub Principal</a>
+        <a href="../Ejercicio_1/index.html" class="nav-link">E1: Geolocalización</a>
+        <a href="../Ejercicio_2/index.html" class="nav-link">E2: Cámara</a>
+        <a href="../Ejercicio_3/index.html" class="nav-link">E3: Notificaciones</a>
+        <a href="../Ejercicio_4/index.html" class="nav-link active">E4: IndexedDB</a>
+        <a href="../Ejercicio_5/index.html" class="nav-link">E5: Caché Dinámica</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Academic specification banner -->
+      <section class="alert alert-info">
+        <div>
+          <strong>Especificación Académica:</strong>
+          Apertura y creación de un Object Store en <code>IndexedDB</code> con JavaScript nativo. Implementación de una interfaz para insertar, consultar y eliminar registros locales sin depender de una conexión a internet.
+        </div>
+      </section>
+
+      <!-- Storage Metrics Bar -->
+      <div class="stats-banner">
+        <div class="stat-box">
+          <span class="stat-number" id="statTotalRecords">0</span>
+          <span class="stat-label">Registros Guardados</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number" id="statDbStatus">Online / Local</span>
+          <span class="stat-label">Estado de Almacenamiento</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number" id="statEstimatedSize">~ 0 KB</span>
+          <span class="stat-label">Espacio Estimado</span>
+        </div>
+      </div>
+
+      <div class="idb-layout">
+        <!-- Columna Izquierda: Formulario de Inserción -->
+        <div class="form-side">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" id="formHeaderTitle">Nuevo Registro Local</h2>
+                <p class="card-subtitle">Almacenamiento transaccional asíncrono</p>
+              </div>
+              <span id="editModeBadge" class="badge badge-cyan" style="display: none;">Modo Edición</span>
+            </div>
+
+            <form id="recordForm">
+              <input type="hidden" id="editRecordId" value="">
+
+              <div class="form-group">
+                <label for="recordTitle" class="form-label">Título del Registro:</label>
+                <input type="text" id="recordTitle" class="form-control" placeholder="Ej. Calibración de sensor GPS" required>
+              </div>
+
+              <div class="form-group">
+                <label for="recordCategory" class="form-label">Categoría:</label>
+                <select id="recordCategory" class="form-control">
+                  <option value="Hardware">🔌 Hardware & Sensores</option>
+                  <option value="Personal">👤 Personal / Tarea</option>
+                  <option value="PWA">⚡ Progressive Web App</option>
+                  <option value="Notas">📝 Nota General</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="recordPriority" class="form-label">Nivel de Prioridad:</label>
+                <select id="recordPriority" class="form-control">
+                  <option value="Normal">🟢 Normal</option>
+                  <option value="Alta">🟡 Alta</option>
+                  <option value="Crítica">🔴 Crítica</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="recordDescription" class="form-label">Descripción / Contenido:</label>
+                <textarea id="recordDescription" class="form-control" rows="3" placeholder="Detalles guardados directamente en la base de datos local..." required></textarea>
+              </div>
+
+              <div class="form-buttons">
+                <button type="submit" id="btnSubmitRecord" class="btn btn-primary" style="flex: 2;">
+                  💾 Guardar en IndexedDB
+                </button>
+                <button type="button" id="btnCancelEdit" class="btn btn-secondary" style="display: none; flex: 1;">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+
+            <!-- Quick tools -->
+            <div class="db-tools-box">
+              <span class="tools-title">Herramientas Rápidas:</span>
+              <div class="tools-buttons">
+                <button id="btnLoadSeed" class="btn btn-secondary" title="Cargar 3 datos de prueba predefinidos">
+                  🌱 Cargar Muestra
+                </button>
+                <button id="btnExportJson" class="btn btn-secondary" title="Descargar como archivo JSON">
+                  📤 Exportar JSON
+                </button>
+                <button id="btnClearAll" class="btn btn-danger" title="Borrar toda la colección">
+                  🗑️ Vaciar DB
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Consultas, Filtros y Lista de Registros -->
+        <div class="records-side">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Explorador de Registros (Store: registros)</h2>
+                <p class="card-subtitle">Consultas y eliminación reactiva en tiempo real</p>
+              </div>
+              <span class="badge badge-emerald">100% Offline</span>
+            </div>
+
+            <!-- Filtros de búsqueda y categoría -->
+            <div class="filter-bar">
+              <input type="text" id="searchInput" class="form-control" placeholder="🔍 Buscar por título o descripción...">
+              <select id="filterCategory" class="form-control category-select">
+                <option value="all">Todas las categorías</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Personal">Personal</option>
+                <option value="PWA">PWA</option>
+                <option value="Notas">Notas</option>
+              </select>
+            </div>
+
+            <!-- Contenedor dinámico de registros -->
+            <div id="recordsContainer" class="records-container">
+              <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h3>No hay registros guardados</h3>
+                <p>Crea tu primer registro con el formulario lateral o presiona "Cargar Muestra".</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Code Snippet -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1rem;">Código Técnico Implementado</h3>
+              <span class="badge badge-purple">IndexedDB API</span>
+            </div>
+            <pre class="tech-box"><code>// 1. Apertura y creación de Store con índices
+const req = indexedDB.open('PortafolioPWA_DB', 1);
+req.onupgradeneeded = (e) => {
+  const store = e.target.result.createObjectStore('registros', { keyPath: 'id', autoIncrement: true });
+  store.createIndex('by_titulo', 'titulo');
+};
+
+// 2. Transacción asíncrona de inserción
+const tx = db.transaction(['registros'], 'readwrite');
+tx.objectStore('registros').add({ titulo, categoria, descripcion, fecha });
+
+// 3. Consulta de todos los registros
+const records = await store.getAll();</code></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Ejercicio 4</strong> — Portafolio de Aplicaciones Web Progresivas
+      </div>
+      <div>
+        Diseñado y desarrollado por <span class="author-pill">calavanda</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

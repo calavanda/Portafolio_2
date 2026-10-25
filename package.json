@@ -1,0 +1,21 @@
+{
+  "name": "portafolio-pwa-avanzado",
+  "version": "1.0.0",
+  "description": "Portafolio de 5 ejercicios prácticos individuales para Aplicación Web Progresiva (PWA): Permisos, Geolocalización, Cámara, Notificaciones SW, IndexedDB y Caché Dinámica Network-First.",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs"
+  },
+  "keywords": [
+    "pwa",
+    "service-worker",
+    "indexeddb",
+    "geolocation",
+    "getusermedia",
+    "notifications",
+    "cache-api",
+    "network-first"
+  ],
+  "author": "calavanda",
+  "license": "MIT"
+}

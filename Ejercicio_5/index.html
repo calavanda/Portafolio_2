@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio 5: Caché Dinámica con Fallback a IndexedDB | calavanda</title>
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../common/design-system.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="../index.html" class="brand-wrapper">
+        <img src="../icons/icon.svg" alt="PWA Logo" class="brand-logo">
+        <div class="brand-text">
+          <h1>Ejercicio 5: Caché Dinámica & Fallback</h1>
+          <div class="brand-meta">
+            <span>Portafolio PWA Avanzado</span>
+            <span>•</span>
+            <span class="author-pill">Autor: calavanda</span>
+          </div>
+        </div>
+      </a>
+
+      <nav class="nav-pills">
+        <a href="../index.html" class="nav-link">← Hub Principal</a>
+        <a href="../Ejercicio_1/index.html" class="nav-link">E1: Geolocalización</a>
+        <a href="../Ejercicio_2/index.html" class="nav-link">E2: Cámara</a>
+        <a href="../Ejercicio_3/index.html" class="nav-link">E3: Notificaciones</a>
+        <a href="../Ejercicio_4/index.html" class="nav-link">E4: IndexedDB</a>
+        <a href="../Ejercicio_5/index.html" class="nav-link active">E5: Caché Dinámica</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Academic specification banner -->
+      <section class="alert alert-info">
+        <div>
+          <strong>Especificación Académica:</strong>
+          Consumo de una API REST remota mediante <code>fetch</code> con estrategia <strong>Network-First</strong>: al recibir el JSON guarda una copia local sincronizada en <code>IndexedDB</code> y <code>Cache API</code>. Si el dispositivo se queda sin red, la interfaz recupera y renderiza de forma automática el último JSON almacenado localmente.
+        </div>
+      </section>
+
+      <!-- Network and Cache Status Bar -->
+      <div class="strategy-banner">
+        <div class="status-tile">
+          <div class="tile-header">
+            <span class="status-indicator status-online" id="networkDot"></span>
+            <span class="tile-title">Estado de Red</span>
+          </div>
+          <div class="tile-value" id="networkStatusText">En Línea (Online)</div>
+          <small class="tile-sub" id="networkSubtext">navigator.onLine = true</small>
+        </div>
+
+        <div class="status-tile">
+          <div class="tile-header">
+            <span class="status-indicator status-online" id="sourceDot"></span>
+            <span class="tile-title">Origen de Datos Actual</span>
+          </div>
+          <div class="tile-value" id="currentSourceBadge">Sin Petición Aún</div>
+          <small class="tile-sub" id="sourceLatencyText">Latencia: -- ms</small>
+        </div>
+
+        <div class="status-tile">
+          <div class="tile-header">
+            <span class="tile-title">Última Sincronización Local</span>
+          </div>
+          <div class="tile-value" id="lastSyncTimeText">Nunca</div>
+          <small class="tile-sub" id="syncStoreSubtext">IndexedDB Store: api_cache</small>
+        </div>
+      </div>
+
+      <!-- Controls & Execution Deck -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Consola de Ejecución Network-First</h2>
+            <p class="card-subtitle">Prueba la respuesta en vivo o simula cortes de red para verificar el fallback</p>
+          </div>
+          <span class="badge badge-purple">Network-First Strategy</span>
+        </div>
+
+        <div class="controls-deck">
+          <!-- Endpoint selector -->
+          <div class="form-group" style="flex: 2; min-width: 260px; margin-bottom: 0;">
+            <label for="apiEndpointSelect" class="form-label">Endpoint REST a Consumir:</label>
+            <select id="apiEndpointSelect" class="form-control">
+              <option value="products">🛍️ DummyJSON Products (Catálogo con imágenes y precios)</option>
+              <option value="posts">📝 JSONPlaceholder Posts (Artículos y publicaciones)</option>
+              <option value="quotes">💬 DummyJSON Quotes (Citas célebres y autores)</option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="buttons-row">
+            <button id="btnFetchData" class="btn btn-primary">
+              🌐 Consultar API REST
+            </button>
+            <button id="btnToggleSimulatedOffline" class="btn btn-secondary">
+              🔌 Simular Desconexión (Offline)
+            </button>
+            <button id="btnClearCache" class="btn btn-danger" title="Borrar copia de IndexedDB">
+              🗑️ Limpiar Caché
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulation Warning Banner -->
+        <div id="simulatedOfflineNotice" class="alert alert-warning" style="display: none; margin-top: 1.25rem; margin-bottom: 0;">
+          <div>
+            <strong>Modo Simulación Offline Activo:</strong> Las llamadas de red están bloqueadas deliberadamente. Al hacer clic en "Consultar API REST", el sistema activará automáticamente el <strong>Fallback a IndexedDB</strong> mostrando los últimos datos guardados.
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Results Display Grid -->
+      <div class="results-layout">
+        <!-- Rendered Visual Cards Column -->
+        <div class="cards-column">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Datos Renderizados</h3>
+                <p class="card-subtitle" id="resultsCountSubtitle">Esperando consulta...</p>
+              </div>
+              <span id="renderSourceBadge" class="badge badge-cyan">Pendiente</span>
+            </div>
+
+            <!-- Loader -->
+            <div id="apiLoader" class="loader-box" style="display: none;">
+              <div class="spinner"></div>
+              <span>Ejecutando Network-First: Intentando obtener datos frescos de la red...</span>
+            </div>
+
+            <!-- Error / Offline Fallback Notice -->
+            <div id="fallbackNotice" class="fallback-notice" style="display: none;">
+              <span class="notice-icon">💾</span>
+              <div>
+                <strong>¡Recuperado desde IndexedDB con éxito!</strong>
+                <p id="fallbackNoticeDetails">No se pudo contactar a la red. Se desplegó automáticamente la copia local más reciente.</p>
+              </div>
+            </div>
+
+            <!-- Dynamic items container -->
+            <div id="itemsContainer" class="items-grid">
+              <div class="empty-state">
+                <div class="empty-icon">📡</div>
+                <h4>Haz clic en "Consultar API REST"</h4>
+                <p>El sistema obtendrá el JSON de la red, lo guardará en IndexedDB y lo dejará disponible para consumo offline.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw JSON Inspector Column -->
+        <div class="json-column">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Visor de Payload JSON</h3>
+                <p class="card-subtitle">Estructura persistida en IndexedDB</p>
+              </div>
+              <button id="btnCopyJson" class="btn btn-secondary" style="padding: 0.3rem 0.7rem; font-size: 0.75rem;">
+                📋 Copiar
+              </button>
+            </div>
+
+            <pre id="jsonViewer" class="tech-box json-view"><code>{\n  "status": "Sin datos cargados",\n  "autor": "calavanda"\n}</code></pre>
+          </div>
+
+          <!-- Code Snippet -->
+          <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title" style="font-size: 1rem;">Código Técnico Implementado</h3>
+              <span class="badge badge-purple">Network-First Flow</span>
+            </div>
+            <pre class="tech-box"><code>async function fetchNetworkFirst(apiUrl) {
+  try {
+    // 1. Intento primario por Red
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+    
+    // 2. Guardar en IndexedDB local
+    await apiCacheDB.saveApiResponse('last_api', json, apiUrl);
+    return { data: json, source: 'network' };
+  } catch (err) {
+    // 3. Fallback automático a IndexedDB
+    const cached = await apiCacheDB.getApiResponse('last_api');
+    if (cached) return { data: cached.data, source: 'indexeddb' };
+    throw err;
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>
+        <strong>Ejercicio 5</strong> — Portafolio de Aplicaciones Web Progresivas
+      </div>
+      <div>
+        Diseñado y desarrollado por <span class="author-pill">calavanda</span>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
