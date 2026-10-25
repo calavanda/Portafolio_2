@@ -10,7 +10,7 @@
 Cada ejercicio se encuentra organizado de forma **autónoma e independiente** dentro de su propia carpeta, cumpliendo estrictamente con el requerimiento:
 
 ```text
-Portafolio2/
+Portafolio_2/
 │
 ├── Ejercicio_1/                 # Ejercicio 1: Permisos y Geolocalización
 │   ├── index.html               # Interfaz interactiva y visor de mapa Leaflet
@@ -59,7 +59,7 @@ Portafolio2/
 
 ## 🚀 Cómo Ejecutar el Proyecto Localmente
 
-1. Abre una terminal en la raíz del proyecto (`d:\Projects\Guillermo\Portafolio2`).
+1. Abre una terminal en la raíz del proyecto (`\Portafolio_2`).
 2. Ejecuta el servidor local:
    ```bash
    npm run dev
